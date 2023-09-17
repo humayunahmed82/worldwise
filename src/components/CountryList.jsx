@@ -10,10 +10,18 @@ const CountryList = ({ cities, isLoading }) => {
 			<Message message="Add your first city clicking on a city on the map" />
 		);
 
+	const countries = cities.reduce((arr, city) => {
+		if (!arr.map((el) => el.country).includes(city.country))
+			return [...arr, { country: city.country, emoji: city.emoji }];
+		else return arr;
+	}, []);
+
+	console.log(countries);
+
 	return (
-		<ul className={styles.cityList}>
-			{cities.map((city) => (
-				<CountryItem country={city} />
+		<ul className={styles.countryList}>
+			{countries.map((country) => (
+				<CountryItem country={country} key={country.id} />
 			))}
 		</ul>
 	);
