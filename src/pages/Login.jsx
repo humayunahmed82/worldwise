@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styles from "./Login.module.css";
+import Button from "../components/Button";
 
 const Login = () => {
 	// PRE-FILL FOR DEV PURPOSES
@@ -30,7 +31,7 @@ const Login = () => {
 				</div>
 
 				<div>
-					<button>Login</button>
+					<Button type="primary">Login</Button>
 				</div>
 			</form>
 		</main>
