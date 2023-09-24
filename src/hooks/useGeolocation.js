@@ -1,26 +1,54 @@
-import { useState } from "react";
+import { useReducer } from "react";
+
+const initialState = {
+	isLoading: false,
+	position: null,
+	error: null,
+};
+
+const reducer = (state, action) => {
+	switch (action.type) {
+		case "loading":
+			return { ...state, isLoading: false };
+		case "position/loaded":
+			return { ...state, isLoading: false, position: action.payload };
+		case "error":
+			return { ...state, isLoading: false, error: action.payload };
+
+		default:
+			throw new Error("Unknown action type");
+	}
+};
 
 const useGeolocation = (defaultPosition = null) => {
-	const [isLoading, setIsLoading] = useState(false);
-	const [position, setPosition] = useState(defaultPosition);
-	const [error, setError] = useState(null);
+	const [state, dispatch] = useReducer(reducer, initialState);
+	const { isLoading, position, error } = state;
+
+	// const [isLoading, setIsLoading] = useState(false);
+	// const [position, setPosition] = useState(defaultPosition);
+	// const [error, setError] = useState(null);
 
 	function getPosition() {
 		if (!navigator.geolocation)
-			return setError("Your browser does not support geolocation");
+			return dispatch({
+				type: "error",
+				payload: "Your browser does not support geolocation",
+			});
 
-		setIsLoading(true);
+		dispatch({ type: "loading" });
+
 		navigator.geolocation.getCurrentPosition(
 			(pos) => {
-				setPosition({
-					lat: pos.coords.latitude,
-					lng: pos.coords.longitude,
+				dispatch({
+					type: "position/loaded",
+					payload: {
+						lat: pos.coords.latitude,
+						lng: pos.coords.longitude,
+					},
 				});
-				setIsLoading(false);
 			},
 			(error) => {
-				setError(error.message);
-				setIsLoading(false);
+				dispatch({ type: "error", payload: error.message });
 			}
 		);
 	}

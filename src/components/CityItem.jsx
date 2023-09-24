@@ -38,3 +38,5 @@ const CityItem = ({ city }) => {
 };
 
 export default CityItem;
+
+// 18. Advanced State Management System Context + useReducer
