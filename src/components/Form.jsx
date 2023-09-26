@@ -1,6 +1,6 @@
 // "https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=0&longitude=0"
 
-import { useEffect, useState } from "react";
+import { useEffect, useReducer } from "react";
 import styles from "./Form.module.css";
 import Button from "./Button";
 import ButtonBack from "./ButtonBack";
@@ -22,25 +22,73 @@ export function convertToEmoji(countryCode) {
 	return String.fromCodePoint(...codePoints);
 }
 
+const initialState = {
+	isLoadingGeocodeing: false,
+	cityName: "",
+	country: "",
+	date: new Date(),
+	notes: "",
+	emoji: "",
+	geocodingError: "",
+};
+
+const reducer = (state, action) => {
+	switch (action.type) {
+		case "Loading/error":
+			return { ...state, isLoadingGeocodeing: true, geocodingError: "" };
+		case "cityName/country/emoji/loading":
+			return {
+				...state,
+				isLoadingGeocodeing: false,
+				cityName: action.payload.city || action.payload.locality || "",
+				country: action.payload.countryName,
+				emoji: convertToEmoji(action.payload.countryCode),
+			};
+		case "error":
+			return { ...state, geocodingError: action.payload };
+		case "cityName":
+			return {
+				...state,
+				cityName: action.payload,
+			};
+
+		case "date":
+			return {
+				...state,
+				date: action.payload,
+			};
+		case "notes":
+			return {
+				...state,
+				notes: action.payload,
+			};
+
+		default:
+			throw new Error("Unknown action type");
+	}
+};
+
 function Form() {
 	const [lat, lng] = useUrlPosition();
 	const { createCity, isLoading } = useCities();
 
 	const navigate = useNavigate();
 
-	const [isLoadingGeocodeing, setIsLoadingGeocoding] = useState(false);
-	const [cityName, setCityName] = useState("");
-	const [country, setCountry] = useState("");
-	const [date, setDate] = useState(new Date());
-	const [notes, setNotes] = useState("");
-	const [emoji, setEmoji] = useState("");
-	const [geocodingError, setGeocodingError] = useState("");
+	const [state, dispatch] = useReducer(reducer, initialState);
+	const {
+		isLoadingGeocodeing,
+		cityName,
+		country,
+		date,
+		notes,
+		emoji,
+		geocodingError,
+	} = state;
 
 	useEffect(() => {
 		const fetchCityData = async () => {
 			try {
-				setIsLoadingGeocoding(true);
-				setGeocodingError("");
+				dispatch({ type: "Loading/error" });
 
 				const res = await fetch(`${BASE_URL}?latitude=${lat}&longitude=${lng}`);
 				const data = await res.json();
@@ -50,13 +98,9 @@ function Form() {
 						"That doesn't seem to be a City. Click somewhere else 😉"
 					);
 
-				setCityName(data.city || data.locality || "");
-				setCountry(data.countryName);
-				setEmoji(convertToEmoji(data.countryCode));
+				dispatch({ type: "cityName/country/emoji/loading", payload: data });
 			} catch (error) {
-				setGeocodingError(error.message);
-			} finally {
-				setIsLoadingGeocoding(false);
+				dispatch({ type: "error", payload: error.message });
 			}
 		};
 		fetchCityData();
@@ -95,7 +139,9 @@ function Form() {
 				<label htmlFor="cityName">City name</label>
 				<input
 					id="cityName"
-					onChange={(e) => setCityName(e.target.value)}
+					onChange={(e) =>
+						dispatch({ type: "cityName", payload: e.target.value })
+					}
 					value={cityName}
 				/>
 				<span className={styles.flag}>{emoji}</span>
@@ -106,7 +152,7 @@ function Form() {
 
 				<DatePicker
 					id="date"
-					onChange={(date) => setDate(date)}
+					onChange={(date) => dispatch({ type: "date", payload: date })}
 					selected={date}
 					dateFormat="dd/MM/yyyy"
 				/>
@@ -116,7 +162,7 @@ function Form() {
 				<label htmlFor="notes">Notes about your trip to {cityName}</label>
 				<textarea
 					id="notes"
-					onChange={(e) => setNotes(e.target.value)}
+					onChange={(e) => dispatch({ type: "notes", payload: e.target.value })}
 					value={notes}
 				/>
 			</div>
