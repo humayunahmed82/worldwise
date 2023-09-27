@@ -3,6 +3,7 @@ import styles from "./Login.module.css";
 import Button from "../components/Button";
 import { useAuth } from "../contexts/FakeAuthContext";
 import { useNavigate } from "react-router-dom";
+import PageNav from "../components/PageNav";
 
 const Login = () => {
 	// PRE-FILL FOR DEV PURPOSES
@@ -24,6 +25,7 @@ const Login = () => {
 
 	return (
 		<main className={styles.login}>
+			<PageNav />
 			<form className={styles.form} onSubmit={handelSubmit}>
 				<div className={styles.row}>
 					<label htmlFor="email">Email address</label>
